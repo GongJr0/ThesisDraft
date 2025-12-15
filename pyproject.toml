@@ -3,18 +3,28 @@ name = "thesisdraft"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
+    "cupy-cuda13x>=13.6.0",
+    "dsgepy>=1.1",
+    "econpizza>=0.6.9",
+    "ipykernel>=7.1.0",
+    "linearsolve>=3.6.3",
     "matplotlib>=3.10.7",
+    "numba>=0.62.1",
     "numpy>=2.3.5",
     "pandas>=2.3.3",
     "pysr>=1.5.9",
     "pyyaml>=6.0.3",
     "scikit-learn>=1.7.2",
     "scipy>=1.16.3",
-    "snowdrop>=1.5.2",
     "statsmodels>=0.14.6",
     "sympy>=1.14.0",
+]
+
+[project.optional-dependencies]
+notebook = [
+    "ipython>=9.8.0",
 ]
 
 [dependency-groups]

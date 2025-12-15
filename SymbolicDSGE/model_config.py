@@ -1,73 +1,44 @@
-import yaml
 from dataclasses import dataclass, asdict
 from typing import Any
-
-
-class FlowList(list):
-    pass
-
-
-def makeflow(
-    dumper: yaml.representer.BaseRepresenter, obj: FlowList
-) -> yaml.nodes.SequenceNode:
-    return dumper.represent_sequence("tag:yaml.org,2002:seq", obj, flow_style=True)
-
-
-yaml.add_representer(FlowList, makeflow)
+from sympy import Symbol, Function, Eq, Expr  # type: ignore
+from sympy.core.relational import Relational  # type: ignore
+from numpy import float64
+import pickle
 
 
 @dataclass
-class Symbols:
-    variables: list[str]
-    shocks: list[str]
-    parameters: list[str]
+class Base:
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def serialize(self, filepath: str) -> None:
+        with open(filepath, "wb") as f:
+            pickle.dump(self, f)
 
 
-@dataclass(init=False)
-class SnowDropConfig:
-    NAME: str
-    SYMBOLS: Symbols
-    EQUATIONS: list[str]
-    CALIBRATION: dict[str, float]
-    OPTIONS: dict[str, Any]
+@dataclass
+class Equations(Base):
+    model: list[Eq]
+    constraint: dict[Symbol, Relational]
+    observable: dict[Symbol, Expr]
 
-    def __init__(self, filepath: str) -> None:
-        with open(filepath, "r") as file:
-            data = yaml.safe_load(file)
 
-        self.NAME = data["name"]
-        self.SYMBOLS = Symbols(**data["symbols"])
-        self.EQUATIONS = data["equations"]
-        self.CALIBRATION = data["calibration"]
-        opt: dict[str, Any] = data.get("options", {})
-        for k, v in opt.items():
-            if isinstance(v, list):
-                opt[k] = FlowList(v)
-        self.OPTIONS = opt
+@dataclass
+class Calib(Base):
+    parameters: dict[Symbol, float64]
+    shocks: dict[Symbol, float64]
 
-        self.validate_calib()
-        return
 
-    def validate_calib(self) -> bool:
-        all_params = {
-            *self.SYMBOLS.parameters,
-            *self.SYMBOLS.shocks,
-            *self.SYMBOLS.variables,
-        }
-        missing_params = [
-            param for param in all_params if param not in self.CALIBRATION
-        ]
-
-        msg = ""
-        if missing_params:
-            msg += f"Missing parameters in calibration: {missing_params}.\n "
-
-        if msg:
-            raise ValueError(msg)
-        return True
-
-    def to_yaml(self, filepath: str) -> None:
-        out = {k.lower(): v for k, v in asdict(self).items()}
-        with open(filepath, "w") as file:
-            yaml.dump(out, file)
-        return
+@dataclass
+class ModelConfig(Base):
+    name: str
+    variables: list[Function]
+    constrained: dict[Function, bool]
+    parameters: list[Symbol]
+    shocks: list[Symbol]
+    observables: list[Symbol]
+    equations: Equations
+    calibration: Calib

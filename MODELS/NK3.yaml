@@ -1,0 +1,143 @@
+# nk3.yaml ---
+#
+# Simple 3-equation New Keynesian model in log-linearized (gap/deviation) form
+# Variables are deviations from steady state; observables add back sample means.
+#
+declarations:
+  name: 'nk3'
+  # Endogenous variables (all in deviations / gaps)
+  # Pi : inflation (deviation from steady-state inflation)
+  # x  : output gap
+  # y  : output level deviation (identified with output gap here)
+  # dy : output growth
+  # r  : nominal interest rate (deviation from steady-state nominal rate)
+  # u  : demand / natural-rate shock
+  # z  : cost-push shock
+  # vr : monetary policy shock
+  variables: [Pi, x, y, dy, r, u, z, vr]
+
+equations:
+  model:
+    # New Keynesian Phillips Curve
+    # Pi_t = beta * E_t[Pi_{t+1}] + kappa * x_t + z_t
+    ~ Pi = beta*Pi(+1) + kappa*x + z
+
+    # IS Curve (Euler equation in gap form)
+    # x_t = E_t[x_{t+1}] - (1/sigma) * (r_t - E_t[Pi_{t+1}] - u_t)
+    # Here u_t captures movements in the natural rate / demand conditions.
+    ~ x  = x(+1) - 1/sigma*(r - Pi(+1) - u)
+
+    # Taylor Rule for nominal interest rate
+    # r_t = rho_r * r_{t-1} + (1 - rho_r) * (phi_pi * Pi_t + phi_x * x_t) + vr_t
+    ~ r  = rho_r*r(-1) + (1-rho_r)*(phi_pi*Pi + phi_x*x) + vr
+
+    # Cost-push shock process
+    # z_t = rho_z * z_{t-1} + e_z_t
+    ~ z  = rho_z*z(-1) + e_z
+
+    # Demand / natural-rate shock process
+    # u_t = rho_u * u_{t-1} + e_u_t
+    ~ u  = rho_u*u(-1) + e_u
+
+    # Monetary policy shock process
+    # vr_t = rho_vr * vr_{t-1} + e_r_t
+    ~ vr = rho_vr*vr(-1) + e_r
+
+    # Link between output gap and output deviation
+    # Here we simply identify y with x (you can refine this if you want)
+#    ~ y  = x
+
+    # Output growth (observable)
+    # dy_t = y_t - y_{t-1}
+    ~ dy = y - y(-1)
+
+  # No occasionally binding constraint here (no ZLB).
+  # If you want to add a ZLB later, introduce a notional rate rn and
+  # use a constraint block as in dfi.yaml:
+  #
+  # constraint:
+  #   ~ r = max(rn, x_bar)
+
+  observables:
+    # GDP growth (annualized / per-period growth), around mean y_mean
+    GDP  : dy + y_mean
+
+    # Inflation, around mean pi_mean
+    Infl : Pi + pi_mean
+
+    # Policy rate (e.g. FFR), around steady-state nominal rate r_ss
+    FFR  : r + r_ss
+
+calibration:
+  parameters:
+    # Discount factor
+    beta    : 0.99
+
+    # Intertemporal elasticity of substitution = 1/sigma
+    sigma   : 1.5
+
+    # Phillips curve slope (can be linked to Calvo, etc., but we calibrate directly here)
+    kappa   : 0.05
+
+    # Taylor rule coefficients
+    phi_pi  : 1.7
+    phi_x   : 0.125
+
+    # Persistence of shocks
+    rho_z   : 0.9
+    rho_u   : 0.8
+    rho_vr  : 0.7
+    rho_r   : 0.7    # interest rate smoothing in Taylor rule
+
+    # Shock standard deviations
+    sig_z   : 0.3
+    sig_u   : 0.5
+    sig_r   : 0.3
+
+    # Means / steady-state values for observables
+    y_mean  : 0.35    # average output growth
+    pi_mean : 0.5     # average inflation
+    r_ss    : 1.0     # steady-state nominal rate (in model units)
+
+#  parafunc:
+    # No functional parameters needed for this minimal NK3.
+    # You can add derived parameters here, e.g. link kappa to Calvo theta, etc.
+    # Example:
+    # theta   : 0.66
+    # kappa   : (1-theta)*(1-beta*theta)/theta
+
+  covariances:
+    # Map structural shocks to their standard deviations
+    e_z: sig_z
+    e_u: sig_u
+    e_r: sig_r
+
+estimation:
+  prior:
+    # Priors are structured as:
+    # name : [initval, lb, ub, dist_type, dist_p1, dist_p2]
+    # dist_type in {uniform, normal, gamma, beta, inv_gamma, inv_gamma_dynare}
+    # For normal/gamma/beta: dist_p1 = mean, dist_p2 = std
+    # For uniform: dist_p1 = lower, dist_p2 = upper
+    # For inv_gamma_dynare: Dynare-style shape parameters
+
+    beta   : [0.99,   0.9,   0.999,  beta,   0.98, 0.01]
+    sigma  : [1.5,    0.25,  4.0,    normal, 1.50, 0.50]
+    kappa  : [0.05,   0.005, 0.5,    normal, 0.05, 0.02]
+
+    phi_pi : [1.7,    1.0,   3.0,    normal, 1.50, 0.25]
+    phi_x  : [0.125,  0.001, 0.5,    normal, 0.125,0.05]
+
+    rho_z  : [0.9,    0.5,   0.999,  beta,   0.8,  0.10]
+    rho_u  : [0.8,    0.5,   0.999,  beta,   0.6,  0.20]
+    rho_vr : [0.7,    0.5,   0.999,  beta,   0.5,  0.20]
+    rho_r  : [0.7,    0.5,   0.999,  beta,   0.5,  0.20]
+
+    sig_z  : [0.3,    0.01,  3.0,    inv_gamma_dynare, 0.1, 2]
+    sig_u  : [0.5,    0.01,  5.0,    inv_gamma_dynare, 0.1, 2]
+    sig_r  : [0.3,    0.01,  3.0,    inv_gamma_dynare, 0.1, 2]
+
+    # You can also put priors on y_mean, pi_mean, r_ss if you want to estimate them:
+    # y_mean : [0.35, -1.0,  2.0,    normal, 0.35, 0.25]
+    # pi_mean: [0.5,  -1.0,  5.0,    normal, 0.50, 0.50]
+    # r_ss   : [1.0,  0.0,   5.0,    normal, 1.00, 0.50]

@@ -1,0 +1,77 @@
+# Description: 3-equation NK model with Taylor-rule parameters from
+# Clarida-Gali-Gertler (Volcker-Greenspan sample),
+# using the k = 4, q = 1 horizon estimates (Table IV).
+
+declarations:
+  name: 'nk_cgg_post79_k4q1'
+  variables: [Pi, x, r, r_star, u]
+  constrained: [r]
+
+  parameters: [beta, sigma, kappa,
+               phi_pi, phi_x, rho_r,
+               rho_u, sig_u, sig_r,
+               rbar, pi_mean, elb_level]
+
+  shocks: [e_u, e_r]
+  observables: [Infl, Rate]
+  para_func: []
+
+equations:
+  model:
+    # NKPC:
+    - Pi = beta*Pi(+1) + kappa*x
+
+    # IS / Euler equation:
+    - x = x(+1) - sigma*(r - Pi(+1)) + u
+
+    # AR(1) demand shock:
+    - u = rho_u*u(-1) + e_u
+
+    # Taylor-rule target with k = 4, q = 1 mapping baked into phi_pi, phi_x:
+    # r_star_t = rbar + phi_pi * Pi_t + phi_x * x_t + e_r_t
+    - r_star = rbar + phi_pi*Pi + phi_x*x + e_r
+
+    # Smoothing:
+    - r = rho_r*r(-1) + (1 - rho_r)*r_star
+
+  constraint:
+    - r = r
+
+  observables:
+    Infl: Pi + pi_mean
+    Rate: r
+
+calibration:
+  parameters:
+    beta: 0.99
+    sigma: 1.0
+    kappa: 0.024
+
+    # CGG Volcker-Greenspan, Table IV, k = 4, q = 1:
+    # pi_star approx 3.25, b approx 2.62, g approx 0.83, rho approx 0.78
+    phi_pi: 2.62
+    phi_x: 0.83
+    rho_r: 0.78
+
+    rho_u: 0.70
+    sig_u: 0.50
+    sig_r: 0.25
+
+    rbar: 4.0
+    pi_mean: 3.25
+    elb_level: 0.0
+
+  parafunc: {}
+
+  covariances:
+    e_u: sig_u
+    e_r: sig_r
+
+estimation:
+  prior:
+    phi_pi: [2.62, 1.0, 4.0, normal, 2.5, 0.5]
+    phi_x:  [0.83, 0.0, 2.0, normal, 0.5, 0.5]
+    rho_r:  [0.78, 0.5, 0.99, beta, 0.7, 0.15]
+    rho_u:  [0.70, 0.01, 0.99, beta, 0.5, 0.20]
+    sig_u:  [0.50, 0.01, 5.0, inv_gamma_dynare, 0.1, 2.0]
+    sig_r:  [0.25, 0.01, 5.0, inv_gamma_dynare, 0.1, 2.0]
