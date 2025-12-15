@@ -3,7 +3,10 @@ from sympy import Symbol, Function, Eq, Expr
 from sympy.core.relational import Relational  # type: ignore
 
 import numpy as np
-from numpy import float64, asarray, ndarray
+from numpy import float64, complex128, asarray, ndarray
+
+import pandas as pd  # fuck linearsolve
+import linearsolve  # type: ignore
 
 from dataclasses import dataclass, asdict
 from typing import Callable, Any, cast
@@ -18,7 +21,7 @@ class CompiledModel:
     objective_eqs: list[Expr]
     objective_funcs: list[Callable]
 
-    equations: Callable
+    equations: Callable[[Any, Any, Any], ndarray]
     n_state: int
     n_exog: int
 
@@ -36,7 +39,28 @@ class SolvedModel:
     def sim(
         self, T: int, shocks: ndarray = None, x0: ndarray = None
     ) -> dict[str, ndarray]:
-        raise NotImplementedError
+        n = self.A.shape[0]
+        x0 = x0 or np.zeros((n,))
+        x0 = asarray(x0, dtype=float64)
+
+        if shocks is None:
+            shocks = np.zeros(
+                (T, self.B.shape[1]), dtype=float
+            )  # Deterministic if no shocks
+        else:
+            shocks = np.asarray(shocks, dtype=float)
+            if shocks.shape[0] != T:
+                raise ValueError("shocks must have shape (T, n_shocks)")
+
+        X = np.zeros((T + 1, n), dtype=float64)
+        X[0, :] = x0
+
+        for t in range(T):
+            X[t + 1] = self.A @ X[t] + self.B @ shocks[t]
+
+        out = {name: X[:, self.compiled.idx[name]] for name in self.compiled.var_names}
+        out["_X"] = X  # Include full state matrix for reference
+        return out
 
     def irf(self, shock: str, T: int, scale: float = 1.0) -> dict[str, ndarray]:
         raise NotImplementedError
@@ -116,29 +140,27 @@ class DSGESolver:
         params = [name_to_param[name] for name in params_order]
 
         compiled: list[Expr] = [sp.simplify(o.subs(subs_map)) for o in shifted]
-        lambda_args = [*cur_syms, *fwd_syms, *params]
+
+        lambda_args = [*fwd_syms, *cur_syms, *params]
         funcs = [sp.lambdify(lambda_args, c, modules="numpy") for c in compiled]
 
         def equations(
             fwd: ndarray, cur: ndarray, par: dict[str, float] | ndarray
         ) -> ndarray:
-            fwd = np.asarray(fwd, dtype=float)
-            cur = np.asarray(cur, dtype=float)
+            fwd = np.asarray(fwd, dtype=complex128)
+            cur = np.asarray(cur, dtype=complex128)
 
             if isinstance(par, dict):
-                par_vec = np.array([par[p.name] for p in params], dtype=float)
+                par_vec = np.array([par[p.name] for p in params], dtype=complex128)
             else:
-                par_vec = np.asarray(par, dtype=float)
+                par_vec = np.asarray(par, dtype=complex128)
                 if par_vec.shape[0] != len(params):
                     raise ValueError(
                         f"Parameter vector length {par_vec.shape[0]} != {len(params)}"
                     )
 
-            out = np.empty(len(funcs), dtype=float)
-            # scalar call per equation; tiny systems so this is fine
-            for i, f in enumerate(funcs):
-                out[i] = float(f(*fwd, *cur, *par_vec))
-            return out
+            vals = [f(*fwd, *cur, *par_vec) for f in funcs]
+            return np.asarray(vals)
 
         if n_state is None or n_exog is None:
             raise ValueError(
@@ -154,6 +176,87 @@ class DSGESolver:
             equations=equations,
             n_state=int(n_state),
             n_exog=int(n_exog),
+        )
+
+    def solve(
+        self,
+        compiled: CompiledModel,
+        *,
+        parameters: dict[str, float] = None,
+        steady_state: ndarray = None,
+        log_linear: bool = False,
+    ) -> SolvedModel:
+
+        conf = self.model_config
+
+        if parameters is None:
+            params: dict[str, float64] = {
+                p.name: float64(conf.calibration.parameters[p])
+                for p in conf.parameters
+                if p in conf.calibration.parameters
+            }
+        else:
+            params = {p: float64(v) for p, v in parameters.items()}
+
+        if steady_state is None:
+            ss: ndarray = np.zeros(len(compiled.var_names), dtype=float64)
+        else:
+            ss = asarray(steady_state, dtype=float64)
+
+        def _eqs(
+            fwd: ndarray, cur: ndarray, par: dict[str, float] | ndarray
+        ) -> ndarray:
+            return compiled.equations(fwd, cur, par)
+
+        mdl = linearsolve.model(
+            equations=_eqs,
+            variables=compiled.var_names,
+            parameters=pd.Series(params, dtype=complex128),
+            n_states=compiled.n_state,
+            n_exo_states=compiled.n_exog,
+        )
+
+        mdl.set_ss(ss)
+        mdl.approximate_and_solve(log_linear=log_linear)
+
+        # Extract solution matrices (linearsolve uses .gx, .hx style in some versions; keep flexible)
+        # Common conventions in linear RE solvers:
+        # x_{t+1} = hx x_t + eta eps_{t+1}
+        # y_t = gx x_t
+        # For your purpose you want a single state transition matrix A and shock impact B
+        # We'll try a few attribute names.
+        p = mdl.p
+        f = mdl.f
+        l = getattr(mdl, "l", None)
+        n = getattr(mdl, "n", None)
+
+        if l is None or n is None:
+            raise AttributeError(
+                "Expected Klein matrices l and n on model (shock impacts)."
+            )
+
+        n_s = compiled.n_state
+        n_u = len(compiled.var_names) - n_s
+
+        A = np.block(
+            [
+                [p, np.zeros((n_s, n_u))],
+                [f @ p, np.zeros((n_u, n_u))],
+            ]
+        )
+
+        B = np.vstack([l, f @ l + n])
+
+        if getattr(mdl, "stab", 0) != 0:
+            raise ValueError(
+                f"Klein stability/uniqueness condition violated (stab={mdl.stab})."
+            )
+
+        return SolvedModel(
+            compiled=compiled,
+            policy=mdl,
+            A=asarray(A, dtype=float64),
+            B=asarray(B, dtype=float64),
         )
 
     @staticmethod

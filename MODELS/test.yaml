@@ -1,6 +1,6 @@
 name: "TEST"
 
-variables: [Pi, x, r, r_star, u]
+variables: [u, r, Pi, x, r_star]
 constrained:
     Pi: false
     x: false
@@ -17,6 +17,11 @@ shocks: [e_u, e_r]
 observables: [Infl, Rate]
 
 equations:
+    # Solver Compatibility Issue:
+    #    Shift all equations such that no lags appear. (`linearsolve` library limitation)
+    #    i.e., u(t) = rho_u*u(t-1) + e_u  -->  u(t+1) = rho_u*u(t) + e_u
+
+
     model:
         # Placeholder Phillips Curve:
         - Pi(t) = beta*Pi(t+1) + kappa*x(t)
@@ -25,13 +30,13 @@ equations:
         - x(t) = x(t+1) - sigma*(r(t) - Pi(t+1)) + u(t)
 
         # Placeholder AR(1) demand shock:
-        - u(t) = rho_u*u(t-1) + e_u
+        - u(t+1) = rho_u*u(t) + e_u
 
         # Placeholder Taylor-rule target rate:
         - r_star(t) = rbar + phi_pi*Pi(t) + phi_x*x(t) + e_r
 
         # Placeholder Interest-rate smoothing:
-        - r(t) = rho_r*r(t-1) + (1 - rho_r)*r_star(t)
+        - r(t+1) = rho_r*r(t) + (1 - rho_r)*r_star(t+1)
 
     constraint:
         r: r(t)

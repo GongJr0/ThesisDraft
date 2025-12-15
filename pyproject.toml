@@ -5,9 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "cupy-cuda13x>=13.6.0",
-    "dsgepy>=1.1",
-    "econpizza>=0.6.9",
     "ipykernel>=7.1.0",
     "linearsolve>=3.6.3",
     "matplotlib>=3.10.7",
