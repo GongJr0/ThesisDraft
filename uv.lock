@@ -286,6 +286,18 @@ wheels = [
 ]
 
 [[package]]
+name = "fredapi"
+version = "0.5.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pandas" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6f/3c/e9281ecda4c6ee5c7d50a4bcf00dc5df1a7ff325e604c9b9510c5bdd8514/fredapi-0.5.2.tar.gz", hash = "sha256:405ca048abed4207d93dbc9b7ee8c46d6b473483650323e2f1c094af83d4b247", size = 14735, upload-time = "2024-05-05T11:42:11.444Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/73/64/1db43417cf7ed430f104a347126b5260a1724ee9a1b7d0b1622262c9c4df/fredapi-0.5.2-py3-none-any.whl", hash = "sha256:961817ec8d70e58886ff7302d3dda908614ad99f77831a59833c4fc3f6150155", size = 11854, upload-time = "2024-05-05T11:42:09.559Z" },
+]
+
+[[package]]
 name = "identify"
 version = "2.6.15"
 source = { registry = "https://pypi.org/simple" }
@@ -1377,6 +1389,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+fred = [
+    { name = "fredapi" },
+]
 notebook = [
     { name = "ipython" },
 ]
@@ -1394,6 +1409,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fredapi", marker = "extra == 'fred'", specifier = ">=0.5.2" },
     { name = "ipykernel", specifier = ">=7.1.0" },
     { name = "ipython", marker = "extra == 'notebook'", specifier = ">=9.8.0" },
     { name = "linearsolve", specifier = ">=3.6.3" },
@@ -1408,7 +1424,7 @@ requires-dist = [
     { name = "statsmodels", specifier = ">=0.14.6" },
     { name = "sympy", specifier = ">=1.14.0" },
 ]
-provides-extras = ["notebook"]
+provides-extras = ["notebook", "fred"]
 
 [package.metadata.requires-dev]
 dev = [

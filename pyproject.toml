@@ -23,6 +23,9 @@ dependencies = [
 notebook = [
     "ipython>=9.8.0",
 ]
+fred = [
+    "fredapi>=0.5.2",
+]
 
 [dependency-groups]
 dev = [
