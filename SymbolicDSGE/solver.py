@@ -40,7 +40,9 @@ class SolvedModel:
         self, T: int, shocks: ndarray = None, x0: ndarray = None
     ) -> dict[str, ndarray]:
         n = self.A.shape[0]
-        x0 = x0 or np.zeros((n,))
+
+        if x0 is None:
+            x0 = np.zeros((n,))
         x0 = asarray(x0, dtype=float64)
 
         if shocks is None:
@@ -62,8 +64,24 @@ class SolvedModel:
         out["_X"] = X  # Include full state matrix for reference
         return out
 
-    def irf(self, shock: str, T: int, scale: float = 1.0) -> dict[str, ndarray]:
-        raise NotImplementedError
+    def irf(self, shocks: list[str], T: int, scale: float = 1.0) -> dict[str, ndarray]:
+        if not shocks:
+            raise ValueError("At least one shock must be specified for IRF.")
+        if not all(
+            s in self.compiled.var_names[: self.compiled.n_exog] for s in shocks
+        ):
+            raise ValueError("Shocked variable not found in exogenous model variables.")
+
+        shock_vec = np.zeros((self.B.shape[1],), dtype=float64)
+        for s in shocks:
+            idx = self.compiled.idx[s]
+            shock_vec[idx] = scale
+        shock_matrix = np.zeros((T, self.B.shape[1]), dtype=float64)
+        shock_matrix[0, :] = shock_vec
+
+        return self.sim(
+            T, shocks=shock_matrix, x0=np.zeros((self.A.shape[0],), dtype=float64)
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -182,7 +200,7 @@ class DSGESolver:
         compiled: CompiledModel,
         *,
         parameters: dict[str, float] = None,
-        steady_state: ndarray = None,
+        steady_state: ndarray | dict[str, float] | None = None,
         log_linear: bool = False,
     ) -> SolvedModel:
 
