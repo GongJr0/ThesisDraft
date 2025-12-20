@@ -118,7 +118,7 @@ class SolvedModel:
             title_kwargs = {"color": "red", "weight": "bold"} if var in shocks else {}
 
             ax[i].plot(time, series)
-            ax[i].axhline(0, color="orange", linewidth=0.5, linestyle="--", alpha=0.5)
+            ax[i].axhline(0, color="orange", linewidth=1, linestyle="--")
             ax[i].set_title(var, **title_kwargs)
             ax[i].set_xlabel("Time")
             ax[i].set_ylabel(rf"{var}")
