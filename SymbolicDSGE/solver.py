@@ -107,6 +107,12 @@ class SolvedModel:
         ax = ax.flatten()
         time = np.arange(T + 1)  # +1 for initial state
 
+        # Remove unused axes
+        nplots = len(transitions)
+        if nplots < len(ax):
+            for i in range(nplots, len(ax)):
+                fig.delaxes(ax[i])
+
         for i, (var, series) in enumerate(transitions.items()):
 
             title_kwargs = {"color": "red", "weight": "bold"} if var in shocks else {}
