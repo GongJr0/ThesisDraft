@@ -11,11 +11,14 @@ import linearsolve  # type: ignore
 from dataclasses import dataclass, asdict
 from typing import Callable, Any, cast
 
+import matplotlib.pyplot as plt
+
 from .model_config import ModelConfig
 
 
 @dataclass(frozen=True)
 class CompiledModel:
+    config: ModelConfig
     var_names: list[str]
     idx: dict[str, int]
     objective_eqs: list[Expr]
@@ -74,14 +77,49 @@ class SolvedModel:
 
         shock_vec = np.zeros((self.B.shape[1],), dtype=float64)
         for s in shocks:
+            var_sigma = self.compiled.config.calibration.parameters.get(
+                Symbol("sig_" + s), 1.0
+            )  # Scale in standard deviation if available
+            var_scale = scale * var_sigma
+
             idx = self.compiled.idx[s]
-            shock_vec[idx] = scale
+            shock_vec[idx] = var_scale
         shock_matrix = np.zeros((T, self.B.shape[1]), dtype=float64)
         shock_matrix[0, :] = shock_vec
 
         return self.sim(
             T, shocks=shock_matrix, x0=np.zeros((self.A.shape[0],), dtype=float64)
         )
+
+    def transition_plot(self, T: int, shocks: list[str], scale: float = 1.0) -> None:
+        transitions = self.irf(shocks=shocks, T=T, scale=scale)
+        transitions.pop("_X", None)
+        n_vars = len(transitions)
+        fig_square = np.sqrt(n_vars)
+        ncols = np.floor(fig_square)  # Strip decimals (no rounding)
+        nrows = (
+            fig_square if fig_square % 1 == 0 else np.ceil(fig_square)
+        )  # Make room for all plots
+
+        fig, ax = plt.subplots(
+            int(nrows), int(ncols), figsize=(4 * ncols, 3 * nrows)
+        )  # 4:3 aspect ratio
+        ax = ax.flatten()
+        time = np.arange(T + 1)  # +1 for initial state
+
+        for i, (var, series) in enumerate(transitions.items()):
+
+            title_kwargs = {"color": "red", "weight": "bold"} if var in shocks else {}
+
+            ax[i].plot(time, series)
+            ax[i].axhline(0, color="orange", linewidth=0.5, linestyle="--", alpha=0.5)
+            ax[i].set_title(var, **title_kwargs)
+            ax[i].set_xlabel("Time")
+            ax[i].set_ylabel(rf"{var}")
+            ax[i].grid(color="black", linestyle=":", alpha=0.33)
+        plt.suptitle("Impulse Response Functions")
+        plt.tight_layout()
+        plt.show()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -186,6 +224,7 @@ class DSGESolver:
             )
 
         return CompiledModel(
+            config=conf,
             var_names=var_order,
             idx=idx,
             objective_eqs=compiled,
