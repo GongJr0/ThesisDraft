@@ -9,7 +9,7 @@ import pandas as pd  # fuck linearsolve
 import linearsolve
 
 from dataclasses import dataclass, asdict
-from typing import Callable, Any, cast
+from typing import Callable, Any, Union, cast
 
 import matplotlib.pyplot as plt
 
@@ -48,10 +48,37 @@ class SolvedModel:
     def sim(
         self,
         T: int,
-        shocks: dict[str, ndarray] = None,
+        shocks: dict[str, Union[Callable[[float], ndarray], ndarray]] = None,
+        shock_scale: float = 1.0,
         x0: ndarray = None,
         observables: bool = False,
     ) -> dict[str, ndarray]:
+        """
+        Simulate the solved DSGE model over T periods.
+        Parameters
+        ----------
+        T : int
+            Number of time periods to simulate.
+
+        shocks : dict[str, Union[Callable[[float], ndarray], ndarray]], optional
+            A dictionary mapping shock variable names to either a callable that generates
+
+        shock_scale : float, optional
+            A scaling factor applied to all shocks.
+
+        x0 : ndarray, optional
+            Initial state vector. If None, defaults to zero vector.
+
+        observables : bool, optional
+            If True, compute and include observable variables in the output.
+
+        Returns
+        -------
+
+        dict[str, ndarray]
+            A dictionary mapping variable names to their simulated time series.
+        """
+
         conf = self.compiled.config
         n = self.A.shape[0]
 
@@ -70,8 +97,24 @@ class SolvedModel:
                         f"Shock variable {name} not found in exogenous model variables."
                     )
                 idx = self.compiled.idx[name]
-                sig = conf.calibration.parameters.get(Symbol("sig_" + name), 1.0)
-                shock_mat[:, idx] = series * sig
+                if isinstance(series, Callable):  # type: ignore
+                    sig = conf.calibration.parameters.get(Symbol(f"sig_{name}"), 1.0)
+                    shock_vals = series(sig)  # type: ignore
+                    if shock_vals.shape[0] != T:
+                        raise ValueError(
+                            f"Shock series for {name} has length {shock_vals.shape[0]}, expected {T}."
+                        )
+                elif isinstance(series, ndarray):
+                    shock_vals = asarray(series, dtype=float64)
+                    if shock_vals.shape[0] != T:
+                        raise ValueError(
+                            f"Shock series for {name} has length {shock_vals.shape[0]}, expected {T}."
+                        )
+                else:
+                    raise TypeError(
+                        f"Shock for {name} must be a callable or ndarray, got {type(series)}."
+                    )
+                shock_mat[:, idx] = shock_vals * shock_scale
 
         X = np.zeros((T + 1, n), dtype=float64)
         X[0, :] = x0
@@ -100,21 +143,48 @@ class SolvedModel:
     def irf(
         self, shocks: list[str], T: int, scale: float = 1.0, observables: bool = False
     ) -> dict[str, ndarray]:
+        """
+        Compute impulse response functions for specified shocks over T periods.
+        Parameters
+        ----------
+        shocks : list[str]
+            List of shock variable names to apply the impulse to.
+
+        T : int
+            Number of time periods to simulate.
+
+        scale : float, optional
+            Scaling factor for the initial shock.
+
+        observables : bool, optional
+            If True, include observable variables in the output.
+
+        Returns
+        -------
+        dict[str, ndarray]
+            A dictionary mapping variable names to their impulse response time series.
+        """
+
         if not shocks:
             raise ValueError("At least one shock must be specified for IRF.")
         if not all(
             s in self.compiled.var_names[: self.compiled.n_exog] for s in shocks
         ):
             raise ValueError("Shocked variable not found in exogenous model variables.")
+        conf = self.compiled.config
 
-        shock_arr = np.zeros((T,), dtype=float64)
-        shock_arr[0] = 1.0 * scale  # Initial shock at t=0
-
-        shock_spec = {s: shock_arr for s in shocks}
+        shock_spec = {}
+        for s in shocks:
+            sym = Symbol(f"sig_{s}")
+            sig = conf.calibration.parameters.get(sym, 1.0)
+            arr = np.zeros((T,), dtype=float64)
+            arr[0] = sig
+            shock_spec[s] = arr
 
         return self.sim(
             T,
-            shocks=shock_spec,
+            shocks=shock_spec,  # type: ignore
+            shock_scale=scale,
             x0=np.zeros((self.A.shape[0],), dtype=float64),
             observables=observables,
         )
@@ -122,6 +192,27 @@ class SolvedModel:
     def transition_plot(
         self, T: int, shocks: list[str], scale: float = 1.0, observables: bool = False
     ) -> None:
+        """
+        Plot impulse response functions for specified shocks over T periods.
+        Parameters
+        ----------
+        T : int
+            Number of time periods to simulate.
+
+        shocks : list[str]
+            List of shock variable names to apply the impulse to.
+
+        scale : float, optional
+            Scaling factor for the initial shock.
+
+        observables : bool, optional
+            If True, include observable variables in the plots.
+
+        Returns
+        -------
+        None
+        """
+
         transitions = self.irf(shocks=shocks, T=T, scale=scale, observables=observables)
         obs_vars = [v.name for v in self.compiled.config.observables]
         transitions.pop("_X", None)
@@ -160,6 +251,13 @@ class SolvedModel:
         plt.show()
 
     def to_dict(self) -> dict[str, Any]:
+        """
+        Convert the SolvedModel dataclass to a dictionary.
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary representation of the SolvedModel.
+        """
         return asdict(self)
 
 

@@ -2,7 +2,7 @@ from scipy.stats import norm, t, uniform
 from scipy.stats._distn_infrastructure import rv_generic
 from numpy import asarray, ndarray, float64, random, zeros
 
-from typing import Literal
+from typing import Literal, Callable
 
 
 def abstract_shock_array(
@@ -67,7 +67,7 @@ def t_shock_array(
 
 
 def uniform_shock_array(
-    T: int, seed: int | None, low: float = 0.0, high: float = 1.0
+    T: int, seed: int | None, loc: float = 0.0, scale: float = 1.0
 ) -> ndarray:
     """
     Generate an array of uniformly distributed shocks.
@@ -81,7 +81,7 @@ def uniform_shock_array(
     Returns:
     np.ndarray: An array of uniformly distributed shocks of length T.
     """
-    return abstract_shock_array(T, seed, uniform, loc=low, scale=high - low)
+    return abstract_shock_array(T, seed, uniform, loc=loc, scale=scale)
 
 
 def shock_placement(
@@ -131,19 +131,26 @@ class Shock:
 
     # TODO: Pass through array if provided else generate based on dist
 
-    def generate_shocks(self) -> ndarray:
+    def shock_generator(self) -> Callable[[float], ndarray]:
         assert self.dist is not None, "Distribution must be specified."
         assert (
             self.shock_arr is None
         ), "shock_arr is already provided. Please use place_shocks to mutate it."
-
-        return abstract_shock_array(
+        assert "scale" not in self.dist_kwargs, (
+            "The generator function returns a callable that takes scale as an argument."
+            " Please adjust `sig_` variables in the config to change the distribution scale."
+            " Alternatively, the scale parameter in simulation and irf functions are multiplied directly with the shocks generated."
+        )
+        kwargs = self.dist_kwargs.copy()
+        fun = lambda sigma: abstract_shock_array(
             self.T,
             self.seed,
             self._get_dist(),
             *self.dist_args,
-            **self.dist_kwargs,
+            **{**kwargs, "scale": sigma},
         )
+
+        return fun
 
     def place_shocks(self, shock_spec: dict[int, float]) -> ndarray:
         if self.shock_arr is not None:
