@@ -1,7 +1,7 @@
 [project]
-name = "thesisdraft"
+name = "SymbolicDSGE"
 version = "0.1.0"
-description = "Add your description here"
+description = "A diagnostic symbolic adjustment layer for simple DSGE models. Has a built-in DSGE linearized engine and a symbolic discovery to align solved model equations to empirical data by adjusting the model equations."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
