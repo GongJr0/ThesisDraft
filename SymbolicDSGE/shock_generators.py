@@ -2,9 +2,15 @@ from scipy.stats import norm, t, uniform
 from scipy.stats._distn_infrastructure import rv_generic
 from numpy import asarray, ndarray, float64, random, zeros
 
+from typing import Literal
+
 
 def abstract_shock_array(
-    T: int, seed: int, dist: rv_generic, *dist_args: object, **dist_kwargs: object
+    T: int,
+    seed: int | None,
+    dist: rv_generic,
+    *dist_args: object,
+    **dist_kwargs: object,
 ) -> ndarray:
     """
     Generate an array of shocks based on a specified distribution.
@@ -42,7 +48,7 @@ def normal_shock_array(
 
 
 def t_shock_array(
-    T: int, seed: int, df: float, loc: float = 0.0, scale: float = 1.0
+    T: int, seed: int | None, df: float, loc: float = 0.0, scale: float = 1.0
 ) -> ndarray:
     """
     Generate an array of t-distributed shocks.
@@ -61,7 +67,7 @@ def t_shock_array(
 
 
 def uniform_shock_array(
-    T: int, seed: int, low: float = 0.0, high: float = 1.0
+    T: int, seed: int | None, low: float = 0.0, high: float = 1.0
 ) -> ndarray:
     """
     Generate an array of uniformly distributed shocks.
@@ -79,7 +85,7 @@ def uniform_shock_array(
 
 
 def shock_placement(
-    T: int, shock_spec: dict[int, list[float]], shock_arr: ndarray = None
+    T: int, shock_spec: dict[int, float], shock_arr: ndarray = None
 ) -> ndarray:
     """
     Place shocks in a time series array based on a shock specification.
@@ -97,10 +103,65 @@ def shock_placement(
         shocks = shock_arr
     else:
         rdim = T
-        cdim = len(list(shock_spec.values())[0])
-        shocks = zeros((rdim, cdim), dtype=float64)
+        shocks = zeros((rdim,), dtype=float64)
 
     for i, shock in shock_spec.items():
-        shocks[i, :] = asarray(shock, dtype=float64)
+        shocks[i] = shock
 
     return shocks
+
+
+class Shock:
+    def __init__(
+        self,
+        T: int,
+        dist: Literal["norm", "t", "uni"] | rv_generic | None = None,
+        seed: int | None = 0,
+        dist_args: tuple = (),
+        dist_kwargs: dict = {},
+        shock_arr: ndarray | None = None,
+    ) -> None:
+
+        self.T = T
+        self.dist = dist
+        self.seed = seed
+        self.dist_args = dist_args
+        self.dist_kwargs = dist_kwargs
+        self.shock_arr = shock_arr
+
+    # TODO: Pass through array if provided else generate based on dist
+
+    def generate_shocks(self) -> ndarray:
+        assert self.dist is not None, "Distribution must be specified."
+        assert (
+            self.shock_arr is None
+        ), "shock_arr is already provided. Please use place_shocks to mutate it."
+
+        return abstract_shock_array(
+            self.T,
+            self.seed,
+            self._get_dist(),
+            *self.dist_args,
+            **self.dist_kwargs,
+        )
+
+    def place_shocks(self, shock_spec: dict[int, float]) -> ndarray:
+        if self.shock_arr is not None:
+            assert self.shock_arr.shape[0] == self.T, "shock_arr length must match T."
+
+        return shock_placement(self.T, shock_spec, self.shock_arr)
+
+    def _get_dist(self) -> rv_generic:
+        dist = self.dist
+
+        if dist == "norm":
+            return norm
+        elif dist == "t":
+            return t
+        elif dist == "uni":
+            return uniform
+        else:
+            assert isinstance(
+                dist, rv_generic
+            ), "dist must be a valid scipy.stats distribution or a string identifier."
+            return dist

@@ -48,30 +48,36 @@ class SolvedModel:
     def sim(
         self,
         T: int,
-        shocks: ndarray = None,
+        shocks: dict[str, ndarray] = None,
         x0: ndarray = None,
         observables: bool = False,
     ) -> dict[str, ndarray]:
+        conf = self.compiled.config
         n = self.A.shape[0]
 
         if x0 is None:
             x0 = np.zeros((n,))
         x0 = asarray(x0, dtype=float64)
 
-        if shocks is None:
-            shocks = np.zeros(
-                (T, self.B.shape[1]), dtype=float
-            )  # Deterministic if no shocks
-        else:
-            shocks = np.asarray(shocks, dtype=float)
-            if shocks.shape[0] != T:
-                raise ValueError("shocks must have shape (T, n_shocks)")
+        shock_mat = np.zeros(
+            (T, self.B.shape[1]), dtype=float
+        )  # Deterministic if no shocks
+
+        if shocks is not None:
+            for name, series in shocks.items():
+                if name not in self.compiled.var_names[: self.compiled.n_exog]:
+                    raise ValueError(
+                        f"Shock variable {name} not found in exogenous model variables."
+                    )
+                idx = self.compiled.idx[name]
+                sig = conf.calibration.parameters.get(Symbol("sig_" + name), 1.0)
+                shock_mat[:, idx] = series * sig
 
         X = np.zeros((T + 1, n), dtype=float64)
         X[0, :] = x0
 
         for t in range(T):
-            X[t + 1] = self.A @ X[t] + self.B @ shocks[t]
+            X[t + 1] = self.A @ X[t] + self.B @ shock_mat[t]
 
         out = {name: X[:, self.compiled.idx[name]] for name in self.compiled.var_names}
         out["_X"] = X  # Include full state matrix for reference
@@ -101,21 +107,14 @@ class SolvedModel:
         ):
             raise ValueError("Shocked variable not found in exogenous model variables.")
 
-        shock_vec = np.zeros((self.B.shape[1],), dtype=float64)
-        for s in shocks:
-            var_sigma = self.compiled.config.calibration.parameters.get(
-                Symbol("sig_" + s), 1.0
-            )  # Scale in standard deviation if available
-            var_scale = scale * var_sigma
+        shock_arr = np.zeros((T,), dtype=float64)
+        shock_arr[0] = 1.0 * scale  # Initial shock at t=0
 
-            idx = self.compiled.idx[s]
-            shock_vec[idx] = var_scale
-        shock_matrix = np.zeros((T, self.B.shape[1]), dtype=float64)
-        shock_matrix[0, :] = shock_vec
+        shock_spec = {s: shock_arr for s in shocks}
 
         return self.sim(
             T,
-            shocks=shock_matrix,
+            shocks=shock_spec,
             x0=np.zeros((self.A.shape[0],), dtype=float64),
             observables=observables,
         )
