@@ -32,6 +32,12 @@ class ShapeMismatchError(Exception):
         super().__init__(message)
 
 
+class MatrixConditionError(Exception):
+    def __init__(self, cond: float64) -> None:
+        message = f"Matrix is ill-conditioned with condition number: {float(cond)}."
+        super().__init__(message)
+
+
 @dataclass(frozen=True)
 class FilterResult:
     x_pred: NDF
@@ -111,6 +117,10 @@ class KalmanFilter:
             return linalg.solve(L.T, y).astype(float64)
         else:
             # Fall back to standard solve
+            c = linalg.cond(S)
+            if c > 1e12:
+                raise MatrixConditionError(c)
+
             return linalg.solve(S, B).astype(float64)
 
     @staticmethod

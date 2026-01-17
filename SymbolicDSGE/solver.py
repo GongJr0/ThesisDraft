@@ -4,16 +4,25 @@ from sympy.core.relational import Relational
 
 import numpy as np
 from numpy import float64, complex128, asarray, ndarray
+from numpy.typing import NDArray
 
 import pandas as pd  # fuck linearsolve
 import linearsolve
 
 from dataclasses import dataclass, asdict
-from typing import Callable, Any, Union, cast
+from typing import Callable, Any, Union, Tuple, TypedDict
 
 import matplotlib.pyplot as plt
 
 from .model_config import ModelConfig
+
+NDF = NDArray[float64]
+ND = NDArray
+
+
+class MeasurementSpec(TypedDict):
+    lin: dict[str, float | float64]
+    const: list[float | float64 | str]
 
 
 @dataclass(frozen=True)
@@ -25,7 +34,7 @@ class CompiledModel:
 
     objective_eqs: list[Expr]
     objective_funcs: list[Callable]
-    equations: Callable[[Any, Any, Any], ndarray]
+    equations: Callable[[Any, Any, Any], ND]
 
     observable_names: list[str]
     observable_eqs: list[Expr]
@@ -48,11 +57,11 @@ class SolvedModel:
     def sim(
         self,
         T: int,
-        shocks: dict[str, Union[Callable[[float], ndarray], ndarray]] = None,
+        shocks: dict[str, Union[Callable[[float], NDF], NDF]] = None,
         shock_scale: float = 1.0,
         x0: ndarray = None,
         observables: bool = False,
-    ) -> dict[str, ndarray]:
+    ) -> dict[str, NDF]:
         """
         Simulate the solved DSGE model over T periods.
         Parameters
@@ -142,7 +151,7 @@ class SolvedModel:
 
     def irf(
         self, shocks: list[str], T: int, scale: float = 1.0, observables: bool = False
-    ) -> dict[str, ndarray]:
+    ) -> dict[str, NDF]:
         """
         Compute impulse response functions for specified shocks over T periods.
         Parameters
@@ -259,6 +268,57 @@ class SolvedModel:
             A dictionary representation of the SolvedModel.
         """
         return asdict(self)
+
+    def _get_param(self, name: str, default: float = None) -> float:
+        """
+        Retrieve a parameter value by name from the calibration parameters.
+        Parameters
+        ----------
+        name : str
+            The name of the parameter to retrieve.
+        default : float, optional
+            The default value to return if the parameter is not found.
+        Returns
+        -------
+        float
+            The value of the parameter.
+        """
+        params = self.compiled.config.calibration.parameters
+        sym = Symbol(name)
+        if sym in params:
+            return float64(params[sym])
+        elif default is not None:
+            return float64(default)
+        raise KeyError(f"Parameter '{name}' not found in calibration parameters.")
+
+    def _build_measurement(
+        self, spec: dict[str, MeasurementSpec]
+    ) -> Tuple[NDF, NDF, list[str]]:
+        n = self.A.shape[0]
+        obs_names = list(spec.keys())
+        m = len(obs_names)
+
+        C = np.zeros((m, n), dtype=float64)
+        d = np.zeros((m,), dtype=float64)
+
+        for i, obs in enumerate(obs_names):
+            row: MeasurementSpec = spec[obs]
+            lin = row.get("lin", {})
+            const = row.get("const", [])
+            for varname, coef in lin.items():
+                j = self.compiled.idx.get(varname)
+                if j is None:
+                    raise KeyError(
+                        f"Variable '{varname}' not found in model variables."
+                    )
+                C[i, j] += float64(coef)
+
+            for c in const:
+                if isinstance(c, str):
+                    d[i] += self._get_param(c)
+                else:
+                    d[i] += float64(c)
+        return C, d, obs_names
 
 
 class DSGESolver:

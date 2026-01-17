@@ -35,7 +35,12 @@ def main() -> None:
 
     print("Publishing the package to PyPI...")
 
-    env = {**os.environ, "TWINE_USERNAME": "__token__", "TWINE_PASSWORD": api}
+    env = {
+        **os.environ,
+        "TWINE_USERNAME": "__token__",
+        "TWINE_PASSWORD": api,
+        "UV_PUBLISH_TOKEN": api,
+    }
 
     publish_result = subprocess.run(
         [

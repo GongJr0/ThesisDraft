@@ -1,14 +1,21 @@
-from scipy.stats import norm, t, uniform
+from scipy.stats import (
+    norm,
+    multivariate_normal as mnorm,
+    t,
+    multivariate_t as mt,
+    uniform,
+)
 from scipy.stats._distn_infrastructure import rv_generic
+from scipy.stats._multivariate import multi_rv_generic
 from numpy import asarray, ndarray, float64, random, zeros
 
-from typing import Literal, Callable
+from typing import Literal, Callable, cast
 
 
 def abstract_shock_array(
     T: int,
     seed: int | None,
-    dist: rv_generic,
+    dist: rv_generic | multi_rv_generic,
     *dist_args: object,
     **dist_kwargs: object,
 ) -> ndarray:
@@ -30,7 +37,10 @@ def abstract_shock_array(
 
 
 def normal_shock_array(
-    T: int, seed: int, mu: float = 0.0, sigma: float = 1.0
+    T: int,
+    seed: int,
+    mu: float = 0.0,
+    sigma: float = 1.0,
 ) -> ndarray:
     """
     Generate an array of normally distributed shocks.
@@ -45,6 +55,33 @@ def normal_shock_array(
     np.ndarray: An array of normally distributed shocks of length T.
     """
     return abstract_shock_array(T, seed, norm, loc=mu, scale=sigma)
+
+
+def normal_multivariate_shock_array(
+    T: int,
+    seed: int,
+    mus: list[float | float64],
+    sigmas: list[float | float64],
+    rhos: list[list[float | float64]],
+) -> ndarray:
+    """
+    Generate an array of multivariate normally distributed shocks.
+
+    Parameters:
+    T (int): The number of time periods.
+    k (int): The number of variables (dimensions).
+    seed (int): Seed for the random number generator.
+    mu (float): Mean of the normal distribution.
+    sigma (float): Standard deviation of the normal distribution.
+
+    Returns:
+    np.ndarray: An array of shape (T, k) of multivariate normally distributed shocks.
+    """
+    cov_matrix = (
+        asarray(sigmas).reshape(-1, 1) * asarray(sigmas).reshape(1, -1) * asarray(rhos)
+    )
+    shocks = abstract_shock_array(T, seed, mnorm, mean=asarray(mus), cov=cov_matrix)
+    return asarray(shocks, dtype=float64)
 
 
 def t_shock_array(
@@ -66,6 +103,34 @@ def t_shock_array(
     return abstract_shock_array(T, seed, t, df=df, loc=loc, scale=scale)
 
 
+def t_multivariate_shock_array(
+    T: int,
+    seed: int | None,
+    df: float,
+    locs: list[float],
+    scales: list[float],
+    rhos: list[list[float]],
+) -> ndarray:
+    """
+    Generate an array of multivariate t-distributed shocks.
+
+    Parameters:
+    T (int): The number of time periods.
+    k (int): The number of variables (dimensions).
+    seed (int): Seed for the random number generator.
+    df (float): Degrees of freedom for the t-distribution.
+    loc (float): Location parameter of the t-distribution.
+    scale (float): Scale parameter of the t-distribution.
+
+    Returns:
+    np.ndarray: An array of shape (T, k) of multivariate t-distributed shocks.
+    """
+    cov_matrix = (
+        asarray(scales).reshape(-1, 1) * asarray(scales).reshape(1, -1) * asarray(rhos)
+    )
+    return abstract_shock_array(T, seed, mt, df=df, loc=asarray(locs), shape=cov_matrix)
+
+
 def uniform_shock_array(
     T: int, seed: int | None, loc: float = 0.0, scale: float = 1.0
 ) -> ndarray:
@@ -82,6 +147,30 @@ def uniform_shock_array(
     np.ndarray: An array of uniformly distributed shocks of length T.
     """
     return abstract_shock_array(T, seed, uniform, loc=loc, scale=scale)
+
+
+def uniform_multivariate_shock_array(
+    T: int, k: int, seed: int | None, loc: float = 0.0, scale: float = 1.0
+) -> ndarray:
+    """
+    [NOT IMPLEMENTED]
+
+    Generate an array of multivariate uniformly distributed shocks.
+
+    Parameters:
+    T (int): The number of time periods.
+    k (int): The number of variables (dimensions).
+    seed (int): Seed for the random number generator.
+    low (float): Lower bound of the uniform distribution.
+    high (float): Upper bound of the uniform distribution.
+
+    Returns:
+    np.ndarray: An array of shape (T, k) of multivariate uniformly distributed shocks.
+    """
+    raise NotImplementedError(
+        "Multivariate uniforms can get complex and computationally expensive."
+        " The function will remain in the namespace but will not be implemented unless explicitly needed."
+    )
 
 
 def shock_placement(
