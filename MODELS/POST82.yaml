@@ -11,12 +11,12 @@ constrained:
 # Parameter naming:
 # beta: discount factor (often fixed near 0.99 in quarterly models; LS paper doesn’t pin it in Table 3)
 # kappa: NKPC slope
-# tau_inv: τ^{-1} in LS (maps to 1/sigma if you prefer sigma = τ)
+# tau_inv: tau^{-1} in LS (maps to 1/sigma)
 # psi_pi, psi_x: Taylor rule loadings (ψ1, ψ2)
 # rho_r, rho_g, rho_z: AR(1) persistence
-# pi_star, r_star: steady-state inflation / real rate (paper units!)
+# pi_star, r_star: steady-state inflation / real rate (paper units)
 # sig_R, sig_g, sig_z: std devs of innovations
-# rho_gz: corr(ε_g, ε_z)  (optional; you can implement later)
+# rho_gz: corr(ε_g, ε_z)
 
 parameters: [beta, kappa, tau_inv,
              psi_pi, psi_x, rho_r,
