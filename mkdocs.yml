@@ -1,0 +1,72 @@
+site_name: SymbolicDSGE Documentation
+site_url: https://gongjr0.github.io/SymbolicDSGE
+repo_url: https://www.github.com/GongJr0/SymbolicDSGE
+repo_name: GongJr0/SymbolicDSGE
+theme:
+  name: material
+
+  features:
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+  
+  font:
+    text: Roboto
+    code: Fira Code
+
+  logo: assets/logo_w.svg
+  favicon: assets/favicon.svg
+
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: teal 
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  icon:
+    repo: fontawesome/brands/github
+    tag:
+      info: octicons/info-16
+      guide: material/notebook
+      doc: material/file-document
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  tags:
+    info: info
+    guide: guide
+    doc: doc
+
+plugins:
+  - privacy
+  - search
+  - tags
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
