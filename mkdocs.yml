@@ -62,11 +62,21 @@ extra:
     info: info
     guide: guide
     doc: doc
+  version:
+    provider: mike
 
 plugins:
   - privacy
   - search
   - tags
+  - mike:
+      alias_type: symlink
+      redirect_template: null
+      deploy_prefix: ''
+      canonical_version: null
+      version_selector: true
+      css_dir: stylesheets
+      javascript_dir: javascripts
 
 markdown_extensions:
   - pymdownx.arithmatex:
