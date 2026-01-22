@@ -49,6 +49,9 @@ theme:
       info: octicons/info-16
       guide: material/notebook
       doc: material/file-document
+    set:
+      - material
+      - octicons
 
 extra_css:
   - https://unpkg.com/katex@0/dist/katex.min.css
@@ -96,6 +99,13 @@ plugins:
       javascript_dir: javascripts
 
 markdown_extensions:
+  - attr_list 
+  - md_in_html
+
+  - pymdownx.emoji: 
+      emoji_index: !!python/name:material.extensions.emoji.twemoji 
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  
   - pymdownx.arithmatex:
         generic: true
 
@@ -103,8 +113,12 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
+
+  
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed
   - pymdownx.superfences
 
 nav:
@@ -124,3 +138,4 @@ nav:
           - FRED: Documentation/Utilities/FRED.md
           - KalmanFilter: Documentation/Utilities/KalmanFilter.md
           - math_utils: Documentation/Utilities/math_utils.md
+  - Contact: contact.md
