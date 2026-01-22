@@ -876,7 +876,36 @@
 
 
 <h1 id="dsgesolver">DSGESolver</h1>
-<p><strong>[TO BE PUBLISHED]</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">DSGESolver</span><span class="p">(</span><span class="n">model_config</span><span class="p">:</span> <span class="n">ModelConfig</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</span></code></pre></div>
+<p>Class responsible for model compilation and solution.</p>
+<p><strong>Attributes:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"><strong>Name</strong></th>
+<th style="text-align: center;"><strong>Type</strong></th>
+<th style="text-align: center;"><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">model_config</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">ModelConfig</span></code></td>
+<td style="text-align: center;">Configuration object to be compiled/solved.</td>
+</tr>
+<tr>
+<td style="text-align: center;">t</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span></code></td>
+<td style="text-align: center;">Time symbol used in model components.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Methods:</strong>
+| <strong>Signature</strong> | <strong>Return Type</strong> | <strong>Description</strong> |
+|:-------------:|:---------------:|:---------------:|
+| <code>#!python .compile(<br>variable_order: list[sp.Function], <br><br>n_state: int = None, <br><br>n_exog: int = None, <br><br>params_order: list[str] = None<br>)</code> | <code class="language-python highlight"><span class="n">CompiledModel</span></code> |Produces a <code class="language-python highlight"><span class="n">CompiledModel</span></code> object respecting the given orders. <code class="language-python highlight"><span class="n">n_exog</span></code> and <code class="language-python highlight"><span class="n">n_state</span></code> must be supplied. |
+| <code>#!python .solve(<br>compiled: CompiledModel, <br><br>parameters:dict[str, float] = None, <br><br>steady_state: ndarray[float] | dict[str, float] = None, <br><br>log_linear: bool = False<br>)</code> | <code class="language-python highlight"><span class="n">SolvedModel</span></code> | Solves the given compiled model and returns a <code class="language-python highlight"><span class="n">SolvedModel</span></code> object.|</p>
 
 
 
