@@ -1,0 +1,12 @@
+title: "Question: "
+labels:
+  - question
+  - from-website
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      placeholder: Describe your question here
+    validations:
+      required: true
