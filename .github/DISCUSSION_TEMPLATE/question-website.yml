@@ -1,14 +1,49 @@
-title: "Question"
+title: "[Question] "
 description: "Ask a question about SymbolicDSGE"
 labels:
   - question
   - from-website
+
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reaching out!  
+        Please describe your question below.
+
   - type: textarea
     id: question
     attributes:
       label: Your question
-      description: Provide as much detail as possible
-      placeholder: Describe your question here
+      description: Provide as much detail as possible so we can help effectively.
+      placeholder: "Describe your question here..."
     validations:
       required: true
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: What area does your question relate to?
+      options:
+        - Model configuration
+        - Solver behavior
+        - Measurement layer
+        - Installation / environment
+        - Other package components
+        - General Q&A 
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: SymbolicDSGE version (optional)
+      description: If relevant, specify the version you're using.
+      placeholder: "e.g., 0.1.8"
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Before submitting
+        - Double‑check that your question is not already answered in the documentation.
+        - If your question is about a bug or feature request, please use the appropriate tab on the website instead.
