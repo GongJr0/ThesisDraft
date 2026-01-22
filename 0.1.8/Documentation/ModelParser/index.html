@@ -926,21 +926,21 @@
 <table>
 <thead>
 <tr>
-<th style="text-align: center;"><strong>Name</strong></th>
+<th style="text-align: left;"><strong>Name</strong></th>
 <th style="text-align: center;"><strong>Type</strong></th>
-<th style="text-align: center;"><strong>Description</strong></th>
+<th style="text-align: right;"><strong>Description</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: center;">config_path</td>
+<td style="text-align: left;">config_path</td>
 <td style="text-align: center;"><code class="language-python highlight"><span class="nb">str</span> <span class="o">|</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span></code></td>
-<td style="text-align: center;">Path to the YAML config file.</td>
+<td style="text-align: right;">Path to the YAML config file.</td>
 </tr>
 <tr>
-<td style="text-align: center;">config</td>
+<td style="text-align: left;">config</td>
 <td style="text-align: center;"><code>ModelConfig</code></td>
-<td style="text-align: center;">Parsed config object.</td>
+<td style="text-align: right;">Parsed config object.</td>
 </tr>
 </tbody>
 </table>
@@ -949,26 +949,26 @@
 <table>
 <thead>
 <tr>
-<th style="text-align: center;"><strong>Signature</strong></th>
+<th style="text-align: left;"><strong>Signature</strong></th>
 <th style="text-align: center;"><strong>Return Type</strong></th>
-<th style="text-align: center;"><strong>Description</strong></th>
+<th style="text-align: right;"><strong>Description</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: center;"><code class="language-python highlight"><span class="o">.</span><span class="n">from_yaml</span><span class="p">()</span></code></td>
+<td style="text-align: left;"><code class="language-python highlight"><span class="o">.</span><span class="n">from_yaml</span><span class="p">()</span></code></td>
 <td style="text-align: center;"><code class="language-python highlight"><span class="n">ModelConfig</span></code></td>
-<td style="text-align: center;">Reads the file and populates <code class="language-python highlight"><span class="n">ModelParser</span><span class="o">.</span><span class="n">config</span></code>. Runs at <code class="language-python highlight"><span class="fm">__init__</span></code>.</td>
+<td style="text-align: right;">Reads the file and populates <code class="language-python highlight"><span class="n">ModelParser</span><span class="o">.</span><span class="n">config</span></code>. Runs at <code class="language-python highlight"><span class="fm">__init__</span></code>.</td>
 </tr>
 <tr>
-<td style="text-align: center;"><code class="language-python highlight"><span class="o">.</span><span class="n">get</span><span class="p">()</span></code></td>
+<td style="text-align: left;"><code class="language-python highlight"><span class="o">.</span><span class="n">get</span><span class="p">()</span></code></td>
 <td style="text-align: center;"><code class="language-python highlight"><span class="n">ModelConfig</span></code></td>
-<td style="text-align: center;">Returns the currently parsed model config.</td>
+<td style="text-align: right;">Returns the currently parsed model config.</td>
 </tr>
 <tr>
-<td style="text-align: center;"><code class="language-python highlight"><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span></code></td>
+<td style="text-align: left;"><code class="language-python highlight"><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span></code></td>
 <td style="text-align: center;"><code class="language-python highlight"><span class="kc">None</span></code></td>
-<td style="text-align: center;">Serializes the current <code class="language-python highlight"><span class="n">ModelConfig</span></code> and saves to <code class="language-python highlight"><span class="n">filepath</span></code>.</td>
+<td style="text-align: right;">Serializes the current <code class="language-python highlight"><span class="n">ModelConfig</span></code> and saves to <code class="language-python highlight"><span class="n">filepath</span></code>.</td>
 </tr>
 </tbody>
 </table>
