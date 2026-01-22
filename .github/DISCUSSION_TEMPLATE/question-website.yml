@@ -1,4 +1,5 @@
-title: "Question: "
+title: "Question"
+description: "Ask a question about SymbolicDSGE"
 labels:
   - question
   - from-website
@@ -7,6 +8,7 @@ body:
     id: question
     attributes:
       label: Your question
+      description: Provide as much detail as possible
       placeholder: Describe your question here
     validations:
       required: true

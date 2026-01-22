@@ -2,6 +2,7 @@ site_name: SymbolicDSGE Documentation
 site_url: https://gongjr0.github.io/SymbolicDSGE
 repo_url: https://www.github.com/GongJr0/SymbolicDSGE
 repo_name: GongJr0/SymbolicDSGE
+copyright: Created by Güney Kıymaç. This project is distributed under the MIT License.
 theme:
   name: material
 
@@ -12,6 +13,7 @@ theme:
     - content.code.copy
     - content.code.select
     - content.code.annotate
+    - navigation.footer
   
   font:
     text: Roboto
@@ -58,6 +60,19 @@ extra_javascript:
   - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
 
 extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://www.github.com/GongJr0/
+      name: GitHub Profile
+
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/guney-kiymac/
+      name: LinkedIn Profile
+
+    - icon: fontawesome/regular/envelope
+      link: mailto:guneykiymac@gmail.com
+      name: Email
+
   tags:
     info: info
     guide: guide
