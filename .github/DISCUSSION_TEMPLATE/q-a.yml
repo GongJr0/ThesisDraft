@@ -2,7 +2,6 @@ title: "[Question] "
 description: "Ask a question about SymbolicDSGE"
 labels:
   - question
-  - from-website
 
 body:
   - type: markdown
