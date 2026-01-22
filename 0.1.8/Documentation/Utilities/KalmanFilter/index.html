@@ -921,7 +921,171 @@
 
 
 <h1 id="kalmanfilter">KalmanFilter</h1>
-<p><strong>[TO BE PUBLISHED]</strong></p>
+<details class="info">
+<summary>Kalman Filter Wiki Page</summary>
+<p>You can refer to the Wikipedia page for derivations and the underlying process. The documentation only includes the user-facing interface.
+<a class="md-button" href="https://en.wikipedia.org/wiki/Kalman_filter">Kalman Filter | Wikipedia</a></p>
+</details>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">FilterResult</span><span class="p">()</span>
+</span></code></pre></div>
+<p><code class="language-python highlight"><span class="n">dataclass</span></code> storing the results of a <strong>Kalman Filter</strong> application.</p>
+<p><strong>Fields:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"><strong>Name</strong></th>
+<th style="text-align: center;"><strong>Type:</strong></th>
+<th style="text-align: right;"><strong>Description:</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">x_pred</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span></code></td>
+<td style="text-align: right;">State prediction before observing <span class="arithmatex">\(y_t\)</span>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">x_filt</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span></code></td>
+<td style="text-align: right;">State estimate after observing <span class="arithmatex">\(y_t\)</span>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">P_pred</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span></code></td>
+<td style="text-align: right;">Predicted state covariance <span class="arithmatex">\(P_{t\mid t-1}\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;">P_filt</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span></code></td>
+<td style="text-align: right;">Filtered state covariance <span class="arithmatex">\(P_{t\mid t}\)</span>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">y_pred</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span></code></td>
+<td style="text-align: right;">Predicted observation. Shape <code>(T, m)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">innov</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span></code></td>
+<td style="text-align: right;">Innovations (measurement residuals). Shape <code>(T, m)</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">S</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span></code></td>
+<td style="text-align: right;">Innovation covariance. Shape <code>(T, m, m)</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">eps_hat</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span></code>, optional</td>
+<td style="text-align: right;">Estimated shocks.</td>
+</tr>
+<tr>
+<td style="text-align: left;">loglik</td>
+<td style="text-align: center;"><code class="language-python highlight"><span class="nb">float</span></code>, optional</td>
+<td style="text-align: right;">Total log-likelihood of the observed data under the filter.</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">KalmanFilter</span><span class="p">()</span>
+</span></code></pre></div>
+Static class containing methods necessary for filter application.</p>
+<p><strong>Methods:</strong></p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">KalmanFilter</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">float64</span> <span class="o">|</span> <span class="n">complex128</span><span class="p">],</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">B</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">float64</span> <span class="o">|</span> <span class="n">complex128</span><span class="p">],</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">C</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">float64</span> <span class="o">|</span> <span class="n">complex128</span><span class="p">],</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">d</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">float64</span> <span class="o">|</span> <span class="n">complex128</span><span class="p">],</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">Q</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">float64</span> <span class="o">|</span> <span class="n">complex128</span><span class="p">],</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">R</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">float64</span> <span class="o">|</span> <span class="n">complex128</span><span class="p">],</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">float64</span> <span class="o">|</span> <span class="n">complex128</span><span class="p">],</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">x0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">P0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="n">return_shocks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="n">symmetrize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="n">jitter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FilterResult</span>
+</span></code></pre></div>
+Apply a Kalman Filter using the given inputs and return a <code class="language-python highlight"><span class="n">FilterResult</span></code> object.</p>
+<p><strong>Inputs:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"><strong>Name</strong></th>
+<th style="text-align: right;"><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">A</td>
+<td style="text-align: right;">State transition matrix.</td>
+</tr>
+<tr>
+<td style="text-align: left;">B</td>
+<td style="text-align: right;">Shock loading matrix.</td>
+</tr>
+<tr>
+<td style="text-align: left;">C</td>
+<td style="text-align: right;">Observation matrix.</td>
+</tr>
+<tr>
+<td style="text-align: left;">d</td>
+<td style="text-align: right;">Observation intercept.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Q</td>
+<td style="text-align: right;">Shock covariance matrix.</td>
+</tr>
+<tr>
+<td style="text-align: left;">R</td>
+<td style="text-align: right;">Observation noise covariance matrix.</td>
+</tr>
+<tr>
+<td style="text-align: left;">y</td>
+<td style="text-align: right;">Observed data over time.</td>
+</tr>
+<tr>
+<td style="text-align: left;">x0 (optional)</td>
+<td style="text-align: right;">Initial state mean. Defaults to zero vector.</td>
+</tr>
+<tr>
+<td style="text-align: left;">P0 (optional)</td>
+<td style="text-align: right;">Initial state covariance. Defaults to large diagonal.</td>
+</tr>
+<tr>
+<td style="text-align: left;">return_shocks</td>
+<td style="text-align: right;">If <code class="language-python highlight"><span class="kc">True</span></code>, compute and return estimated shocks.</td>
+</tr>
+<tr>
+<td style="text-align: left;">symmetrize</td>
+<td style="text-align: right;">Symmetrize the covariance matrices at each step if <code class="language-python highlight"><span class="kc">True</span></code></td>
+</tr>
+<tr>
+<td style="text-align: left;">jitter</td>
+<td style="text-align: right;">Jitter term added to <span class="arithmatex">\(S_t\)</span> if <strong>Cholesky</strong> solution fails.</td>
+</tr>
+</tbody>
+</table>
+<details class="note" open="open">
+<summary>Jitter</summary>
+<p>Though its default is 0.0, running the method with a small jitter is strongly recommended. Using 1e-8 (or similar) can prevent fallback to matrix inversion when Cholesky fails. (Inversion much slower in comparison)</p>
+</details>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"><strong>Type</strong></th>
+<th style="text-align: right;"><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code class="language-python highlight"><span class="n">FilterResult</span></code></td>
+<td style="text-align: right;"><code class="language-python highlight"><span class="n">dataclass</span></code> containing results of the Kalman Filter run.</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -1047,7 +1211,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.code.annotate", "navigation.footer"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": {"doc": "doc", "guide": "guide", "info": "info"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.code.annotate", "navigation.footer", "content.link-preview"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": {"doc": "doc", "guide": "guide", "info": "info"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
