@@ -1228,7 +1228,7 @@ The method simulates <code>T</code> steps given an initial state array and a sho
 </ul>
 <p>Either specification is delivered to <code>.sim</code> in a dictionary corresponding to the variable the innovations are meant to effect.
 In case of multiple shocks with correlation the key for the dictionary uses <code>"g,z"</code> syntax. In correlated cases, the <code>Callable</code> option input should take a covariance matrix while the array option must be of shape <code>(T, n_correlated_shocks)</code>. (order should match the dictionary key)</p>
-<p><code>SymbolicDSGE.Shock</code> is an interface simplifying the shock generation process. It can produce <code>Callable</code> generators for both univariate and multivariate shocks. The class has support for all <code>SciPy</code> distributions from the <code>rv_generic</code> and <code>multi_rv_generic</code> hierarchies. Alongside <code>SciPy</code> support, a custom distribution implementing the <code>.rvs</code> method are supported through the pass-through of distribution args/kwargs.</p>
+<p><code>SymbolicDSGE.Shock</code> is an interface simplifying the shock generation process. It can produce <code>Callable</code> generators for both univariate and multivariate shocks. The class has support for all <code>SciPy</code> distributions from the <code>rv_generic</code> and <code>multi_rv_generic</code> hierarchies. Alongside <code>SciPy</code> support, custom distributions implementing the <code>.rvs</code> method are supported through the pass-through of distribution <code>args</code>/<code>kwargs</code>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">SymbolicDSGE</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shock</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">T</span> <span class="o">=</span> <span class="mi">200</span>
@@ -1408,10 +1408,12 @@ In case of multiple shocks with correlation the key for the dictionary uses <cod
 </span></code></pre></div>
 <img alt="Simulation Plots" src="../../img/qs_sim.png" title="Simulated Paths" /></p>
 <h2 id="further-steps">Further Steps</h2>
-<p>This guide covers the basic capabilities and usage of <code>SymbolicDSGE</code>. Further tools include:
-- <code>SymbolicDSGE.FRED</code> for easy U.S. macro data retrieval 
-- <code>SymbolicDSGE.math_utils</code> for basic detrending, HP filters, etc. 
-- <code>SymbolicDSGE.KalmanFilter</code> for a one-sided Kalman Filter implementation. (standalone as of now but easy model integration interface will be developed) </p>
+<p>This guide covers the basic capabilities and usage of <code>SymbolicDSGE</code>. Further tools include:</p>
+<ul>
+<li><code>SymbolicDSGE.FRED</code> for easy U.S. macro data retrieval </li>
+<li><code>SymbolicDSGE.math_utils</code> for basic detrending, HP filters, etc. </li>
+<li><code>SymbolicDSGE.KalmanFilter</code> for a one-sided Kalman Filter implementation. (standalone as of now but easy model integration interface will be developed) </li>
+</ul>
 <p>If you've read to this point and would like to inspect/interact with the code this guide refers to, you can visit <a href="../../assets/empirical_comparison.ipynb">this</a> link to the file.</p>
 
 
