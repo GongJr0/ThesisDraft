@@ -28,3 +28,14 @@ repos:
         require_serial: true
         additional_dependencies: ["pandas-stubs", "scipy-stubs", "matplotlib-stubs", "types-PyYAML"]
         minimum_pre_commit_version: '2.9.2'
+
+  - repo: local
+    hooks:
+      - id: block-nonempty-env
+        name: .env Blocker
+        description: "Prevent committing non-empty .env files"
+        entry: python ./hook_scripts/check_env.py
+        language: system
+        require_serial: true
+        always_run: true
+        pass_filenames: false
