@@ -1247,7 +1247,7 @@ In case of multiple shocks with correlation the key for the dictionary uses <cod
 </span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="p">}</span>
 </span></code></pre></div>
 <ol>
-<li>Notice the seed argument to the class being parametrized through a lambda. This step is not necessary for functionality. It saves the code of declaring two instances with different seeds if two shocks share variances.</li>
+<li>Notice the seed argument to the class being parametrized through a lambda. This step is not necessary for functionality. It saves the code of declaring two instances with different seeds if two shocks share distributions.</li>
 <li>Seed is passed through here, the code below would operate the same if we used <code>seed=1</code> instead of using a lambda.</li>
 <li>The <code>kwargs</code> specified here are passed to the distribution object in the backend (to <code>SciPy</code>'s rvs methods in this case)</li>
 <li><code>shock_generator</code> produces the <code>Callable</code> object from the parameters given at class initialization. The methods either accept a float <code>sig_</code> or a covariance matrix <code>cov</code> created inside the <code>.sim</code> method.</li>
