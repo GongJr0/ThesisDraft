@@ -13,7 +13,7 @@ from typing import Callable, Any, Union, Tuple, TypedDict, Iterable
 
 import matplotlib.pyplot as plt
 
-from .model_config import ModelConfig, SymbolGetterDict, PairGetterDict
+from .model_config import ModelConfig, SymbolGetterDict
 
 NDF = NDArray[float64]
 ND = NDArray
