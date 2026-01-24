@@ -182,9 +182,9 @@ sim_shocks = {
 
 1. Notice the seed argument to the class being parametrized through a lambda. This step is not necessary for functionality. It saves the code of declaring two instances with different seeds if two shocks share distributions.
 2. Seed is passed through here, the code below would operate the same if we used `seed=1` instead of using a lambda.
-3. The `kwargs` specified here are passed to the distribution object in the backend (to `SciPy`'s rvs methods in this case)
-4. `shock_generator` produces the `Callable` object from the parameters given at class initialization. The methods either accept a float `sig_` or a covariance matrix `cov` created inside the `.sim` method.
-5. The value in this pair is a standalone function that does not depend on model parameters. Once created it can be reused across simulations; the appropriate sig_ or cov is constructed internally from model parameters at simulation time.
+3. The `kwargs` specified here are passed to the distribution object in the backend (to `SciPy`'s `rvs` methods in this case)
+4. `shock_generator` produces the `Callable` object from the parameters given at class initialization. The methods either accept a float `sig` or a covariance matrix `cov` created inside the `.sim` method.
+5. The value in this pair is a standalone function that does not depend on model parameters. Once created it can be reused across simulations; the appropriate `sig` or `cov` is constructed internally from model parameters at simulation time.
 
 `shock_gen()` returns a callable that `.sim` uses in the simulation loop to produce shocks. With the shocks produced, we can simulate stochastic paths as follows:
 

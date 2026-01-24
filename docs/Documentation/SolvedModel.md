@@ -36,8 +36,8 @@ SolvedModel.sim(
 
  1. The dictionary keys can be populated by:
    - An array of shocks `(T, 1) | (T,)` when shocks are for a single variable and `(T, K)` when drawing correlated shocks simultaneously.
-   - A callable accepting either a shock variance descriptor (sigma) or a covariance matrix depending on univariate or multivariate requirements. The callable should return arrays shaped as described above. Per-step generators are not supported.
-2. Shocks are drawn from the specified distribution and all elements in the arrays are scaled by this parameter.
+   - A callable accepting either a shock standard deviation (sigma) or a covariance matrix depending on univariate or multivariate requirements. The callable should return arrays shaped as described above. Per-step generators are not supported.
+1. Shocks are drawn from the specified distribution and all elements in the arrays are scaled by this parameter.
 
  Returns the simulated path defined by the given inputs.
 
@@ -55,16 +55,16 @@ SolvedModel.sim(
     
     - Variable names are parsed by splitting on commas; surrounding whitespace is stripped.
     - Multiple variables can be chained as required. There is no variable count limitation.
-    - The ordering of variables in the key does **not** affect simulation results.
+    - The ordering of variables in the key does __not__ affect simulation results.
     - Shock realizations are always aligned with the innovation ordering defined at model configuration or compilation (`B` matrix order).
 
 ??? info "Multivariate Shock Canonicalization and Reproducibility"
-    When multivariate shock generators are used, variables are **internally reordered to a canonical model-defined order before sampling**.
-    This ensures that simulations are **reproducible under a fixed random seed**, regardless of the order in which variables are specified
+    When multivariate shock generators are used, variables are __internally reordered to a canonical model-defined order before sampling__.
+    This ensures that simulations are __reproducible under a fixed random seed__, regardless of the order in which variables are specified
     in the shock dictionary key (e.g. `"g,z"` vs `"z,g"`).
 
-    This behavior is required because multivariate sampling methods (e.g. Cholesky-based Gaussian draws) are **order-dependent at the
-    realization level**, even when the underlying covariance structure is permutation-invariant.
+    This behavior is required because multivariate sampling methods (e.g. Cholesky-based Gaussian draws) are __order-dependent at the
+    realization level__, even when the underlying covariance structure is permutation-invariant.
 
     Concretely:
     
@@ -76,7 +76,7 @@ SolvedModel.sim(
     *or the realized sample paths* of the simulation when the random seed is fixed.
 
 ??? warning "Custom Shock Generators"
-    While it is technically possible to replicate the internal generator factory’s behavior, this is **strongly discouraged**.
+    While it is technically possible to replicate the internal generator factory’s behavior, this is __strongly discouraged__.
     Custom shock distributions and array manipulations are supported via the `#!python Shock` class (see the [docs](./Shock.md)).
     Bypassing the shock interface may lead to unexpected or unstable behavior.
 
@@ -84,7 +84,7 @@ __Inputs:__
 
 | __Name__ | __Description__ |
 |:---------|----------------:|
-| T | Amount of steps to simulate the paths excluding `x0`. |
+| T | Amount of steps to simulate the paths; excluding `x0`. |
 | shocks | Array or callable generator of shocks keyed by their corresponding variable. |
 | shock_scale | Scaling factor for the shocks. |
 | x0 | Initial state of model variables shaped `(n,)`. (`None` defaults to zeroes) |

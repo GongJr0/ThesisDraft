@@ -26,7 +26,7 @@ class Shock(
     Support functions, and derivation techniques for multivariate uniform distributions will not be implemented unless explicitly requested. 
 
 ??? info "Custom Distributions"
-    The underlying generators are written to accept any class implementing a `#!python .rvs` method (abstract method from `#!python SciPy`). Writing a subclass of either `#!python SciPy` abstraction and implementing said method allows the of creation random values in any desired way.
+    The underlying generators are written to accept any class implementing a `#!python .rvs` method (abstract method from `#!python SciPy`). Writing a subclass of either `#!python SciPy` abstraction and implementing said method allows the creation of random values in any desired way.
 
 ??? info "Generator Factories"
     Generator factories being utilized in this class are currently not part of the public API of `#!python SymbolicDSGE`. Robust and defensive alternatives of generators will be written specifically for the public API in future releases.
@@ -48,7 +48,7 @@ __Attributes:__
 __Methods:__
 
 ```python
-Shock.shock_generator() -> Callable[[float | ndarray[float]], ndarray]
+Shock.shock_generator() -> Callable[[...], ndarray]
 ```
 
 Creates a callable that returns an entire shock array according to the class attributes when called.
@@ -64,30 +64,75 @@ __Returns:__
 
 | __Type(s)__ | __Description__ |
 |:------------|----------------:|
-| `#!python Callable[[float], ndarray[float]]` | Callable taking a single shock variance parameter. (This signature is returned for univariate shocks)
+| `#!python Callable[[float], ndarray[float]]` | Callable taking a single shock standard deviation (sigma) parameter. (This signature is returned for univariate shocks)
 | `#!python Callable[[ndarray[float]], ndarray[float]]` | Callable taking a shock covariance matrix. (This signature is returned for multivariate shocks.) |
 
 &nbsp;
 
 ```python
+@overload
 Shock.place_shocks(
     shock_spec: dict[int, float],
+) -> np.ndarray[float]
+
+@overload
+Shock.place_shocks(
+    shock_spec: dict[tuple[int, int], float]
 ) -> np.ndarray[float]
 ```
 
 Modifies the specified indices of a given shock array to the corresponding values. (Returns a modified zero vector if `shock_arr` isn't specified in the class instance)
 
-???+ warning "Multivariate Implementation"
-    `#!python place_shocks` does not support multivariate adjustments as of now. This is a planned feature for version 0.2.0 of the alpha release cycle.
+`#!python place_shocks` supports univariate and multivariate array manipulations via overloading.
+
+???+ warning "Array Shape Inference"
+    In univariate cases, the array shape can be inferred accurately using `#!python Shock.T`. 
+    
+    In multivariate cases, the number of columns cannot be inferred uniquely from T alone. If `shock_arr` is not provided, `SymbolicDSGE` infers K from `shock_spec` as `#!python K = max_col_idx + 1` where `#!python max_col_idx = max(col_idx for (t, col_idx) in shock_spec)`.
+
+???+ note "Index Bound Enforcement"
+    Out-of-bounds or negative indices raise `#!python IndexError`.
+
+__Overloaded `shock_spec` Scheme:__
+
+| __Mode__ | __Type__ | __Description__ |
+|:---------|:--------:|----------------:|
+| Univariate | `#!python dict[int, float]` | Keys indicate the time index to place the values at. |
+| Multivariate | `#!python dict[tuple[int, int], float]` | Keys contain a two-dimensional indexer `(time_idx, arr_idx)` to access the 2D array using the conventional `(row, col)` specification. Values are placed in the element described by the indexer. |
 
 __Inputs:__
 
 | __Name__ | __Description__ |
 |:---------|----------------:|
-| shock_spec | `#!python dict` keys represent the time indices and values are the shocks that are placed in the corresponding index. |
+| shock_spec | `#!python dict` indicating the position and value required for a modification of `shock_arr`. |
 
 __Returns:__
 
 | __Type__ | __Description__ |
 |:---------|----------------:|
 | `#!python np.ndarray[float]` | Array with specified indices modified as per the specification. | 
+
+__Examples:__
+
+```python
+# Univariate
+Shock(T=10).place_shocks(
+    {
+        0: 1.0,
+        3: -0.5 # (1)!
+    }
+)  # (2)!
+
+# Multivariate (K inferred as 2)
+Shock(T=10, multivar=True).place_shocks(
+    {
+        (0,0): 1.0,
+        (0,1): 2.0, # (3)!
+    }
+)  # (4)!
+```
+
+1. Sets `output[0] = 1.0` and `output[3] = -0.5`.
+2. Returns shape `(10,)`
+3. Sets `output[0, 0] = 1.0` and `output[0, 1] = 2.0`.
+4. Returns shape `(10, 2)` 

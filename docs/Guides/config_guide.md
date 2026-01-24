@@ -61,21 +61,23 @@ parameters: [beta, kappa, tau_inv,
              rho_gz]
 ```
 
-???+ warning "Parameter Naming"
-
-    The current config expects all shock sigmas to be defined as `f"sig_{varname}"` and covariance terms as f"rho_{var1}{var2}", where either order is accepted (`rho_gz` or `rho_zg`). The mapping layer will be updated to accept any variable name in future iterations, but the current config falls back to defaults (`sig_* => 1.0` and `rho_* => 0.0`) if shocks terms are not accompanied by a `sig_` and/or `rho_` parameter.
-
 ???+ note "Calibration Values"
     `SymbolicDSGE` currently expects each parameter to have known values.
     estimation/inference will be implemented but are not accessible as of now.
 
 ## Shocks
 
+???+ note "Wording Convention"
+    This guide uses the term "(co)variance" to refer to a shock term's variance/covariance parameters for brevity. It's important to note that `SymbolicDSGE` expects __standard deviations__ and __correlation coefficients__ in the configuration. 
+
 Shocks are the symbols that represent the stochastic components of the model.
 A shock symbol is separate from its (co)variance and is used to indicate where a respective innovation should be applied in the model equations.
 
 ```yaml
-shocks: [e_g, e_z, e_r]
+shock_map:
+    e_r: r
+    e_g: g
+    e_z: z
 ```
 
 Shock realizations are only injected when the user selects them at simulation time. Therefore, declaring extra variables here and including them in the model equations can be used to test multiple shock configurations from a single model config.
@@ -208,7 +210,13 @@ calibration:
 ```
 
 ### Shocks
-The shocks section maps shock variances to the corresponding terms in model equations. All terms defined in the shock namespace must have a value here.
+The shocks section maps shock (co)variances to the corresponding terms in model equations. Shock terms that are defined but not included in this field will use default values.
+
+- Innovations without a specified standard deviation will assume `1.0`
+- Correlation between excluded pairs will assume `0.0` 
+  
+???+ warning "Shock Parameter Convention"
+    To align with `SciPy` distributions' signatures, the standard deviations of stochastic terms are used instead of the variance.
 
 ???+ info "Shock Selection at Simulations"
     At simulation time, shocks are specified by the exogenous state variable names (e.g., `g`, `z`) or by grouped keys (`#!python "g,z"`), not by the innovation symbols (`e_g`)
@@ -236,11 +244,19 @@ calibration:
         sig_g: 0.18
         sig_z: 0.64
     shocks:
-        e_g: sig_g
-        e_z: sig_z
-        e_r: sig_r
+        std:
+            e_r: sig_r
+            e_g: sig_g
+            e_z: sig_z
+        corr:
+            e_g, e_z: rho_gz
 ```
+
+Innovation terms are paired with the relevant (co)variance parameters through the `std` and `corr` fields of the configuration.
 
 ## Conclusion
 With all components defined, the configuration file now fully specifies a solvable symbolic DSGE model. The parser will construct the symbolic state-space representation, apply calibration, and prepare the model for solution and simulation.
+
 For future reference or a ready-made boilerplate, you can visit [this](../assets/test.yaml) link to see a test configuration in the `SymbolicDSGE` repository.
+
+[Download Test Config](../assets/test.yaml){ .md-button download="" }
