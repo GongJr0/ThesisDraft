@@ -17,7 +17,7 @@ from .model_config import (
     SymbolGetterDict,
     PairGetterDict,
 )
-from .kalman_config import KalmanConfig, make_R
+from .kalman.config import KalmanConfig, make_R
 
 
 @dataclass(frozen=True)

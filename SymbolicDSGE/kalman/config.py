@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from numpy.typing import NDArray
 
 from sympy import Symbol
-from numpy import float64, ndarray, array, eye, outer
+from numpy import float64, array, eye, outer
 
-from .model_config import PairGetterDict, SymbolGetterDict
+from ..model_config import PairGetterDict, SymbolGetterDict
 
 
 @dataclass(frozen=True)
