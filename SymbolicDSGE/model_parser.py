@@ -17,7 +17,7 @@ from .model_config import (
     SymbolGetterDict,
     PairGetterDict,
 )
-from .kalman.config import KalmanConfig, make_R
+from .kalman.config import KalmanConfig, make_R, P0Config
 
 
 @dataclass(frozen=True)
@@ -351,14 +351,18 @@ class ModelParser:
         else:
             R = None
 
+        P0_cfg = P0Config(
+            mode=P0_mode,
+            scale=P0_scale,
+            diag=P0_diag,
+        )
+
         return KalmanConfig(
             y_names=[obs.name for obs in observables],
             R=R,
             jitter=jit,
             symmetrize=symm,
-            P0_mode=P0_mode,
-            P0_scale=P0_scale,
-            P0_diag=P0_diag,
+            P0=P0_cfg,
         )
 
     # --- your strict contract kept (minor tidy only) ---

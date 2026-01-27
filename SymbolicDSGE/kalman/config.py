@@ -8,14 +8,19 @@ from ..model_config import PairGetterDict, SymbolGetterDict
 
 
 @dataclass(frozen=True)
+class P0Config:
+    mode: str
+    scale: float
+    diag: dict[str, float] | None
+
+
+@dataclass(frozen=True)
 class KalmanConfig:
     y_names: list[str]
     R: NDArray | None
     jitter: float
     symmetrize: bool
-    P0_mode: str
-    P0_scale: float
-    P0_diag: dict[str, float] | None
+    P0: P0Config
 
 
 def make_R(
@@ -36,3 +41,16 @@ def make_R(
         rho[j, i] = rho_ij
 
     return outer(sig_vec, sig_vec) * rho
+
+
+@dataclass(frozen=True)
+class KalmanStateSpace:
+    A: NDArray
+    B: NDArray
+    C: NDArray
+    d: NDArray
+    Q: NDArray
+
+    y_names: list[str]
+    eps_names: list[str]
+    x_names: list[str]
