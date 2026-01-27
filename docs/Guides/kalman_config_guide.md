@@ -11,7 +11,7 @@ tags:
 ???+ warning "Read Model Configuration Guide"
     This guide refers to fields used in model configuration and some parameters relevant to Kalman Filters are part of the model parameter family. Please make sure you've read the [model configuration guide](./model_config_guide.md) before reading this one.
 
-`SymbolicDSGE` uses a single configuration file and appends the Kalman Filter (KF) configuration to the same YAML that carries model information. Although Kalman Filtering can be done in a completely mode-detached fashion, there's integration infrastructure provided in the model objects and configurations.
+`SymbolicDSGE` uses a single configuration file and appends the Kalman Filter (KF) configuration to the same YAML that carries model information. Although Kalman Filtering can be done in a completely model-detached fashion, there's integration infrastructure provided in the model objects and configurations.
 
 All KF related configuration entries live under the parent field `kalman:` and are parsed into a `KalmanConfig` object at parse time.
 
