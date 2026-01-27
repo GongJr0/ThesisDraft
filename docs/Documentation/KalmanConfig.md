@@ -17,7 +17,7 @@ __Fields:__
 |:---------|:--------:|----------------:|
 | y_names | `#!python list[str]` | Names of the included observables. |
 | R | `#!python NDArray | None` | Covariance matrix of observation noise. R is generated as a matrix from parsing the config and should not be overridden in the config object.|
-| jitter | `#!python float` | Jitter term to added to covariance matrices if Cholesky fails. |
+| jitter | `#!python float` | Jitter term to be added to covariance matrices if Cholesky fails. |
 | symmetrize | `#!python bool` | Symmetrize the covariance matrices per iteration if `True`. |
 | P0 | `#!python P0Config` | `dataclass` storing the mode and values of the initial $P$ state. |
 
