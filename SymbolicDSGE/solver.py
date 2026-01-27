@@ -33,7 +33,7 @@ class MeasurementSpec(TypedDict):
 @dataclass(frozen=True)
 class CompiledModel:
     config: ModelConfig
-    kalman: KalmanConfig
+    kalman: KalmanConfig | None
 
     cur_syms: list[Symbol]
 
