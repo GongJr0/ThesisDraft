@@ -3,7 +3,7 @@ from .model_parser import ModelParser
 from .solver import DSGESolver
 from .fred import FRED
 from .shock_generators import Shock
-from . import kalman
+from .kalman.filter import KalmanFilter
 from . import math_utils
 
 __all__ = [
@@ -11,7 +11,7 @@ __all__ = [
     "ModelParser",
     "DSGESolver",
     "FRED",
-    "kalman",
+    "KalmanFilter",
     "math_utils",
     "Shock",
 ]
