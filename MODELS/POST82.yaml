@@ -112,7 +112,7 @@ kalman:
       Infl, Out_HP: meas_rho_io
       Rate, Out_HP: meas_rho_or
   P0:
-    mode: "diag" # "diag" | "eye"
+    mode: diag # "diag" | "eye"
     scale: 10.0
     diag:
     # = 'eye' if all = 1.0
